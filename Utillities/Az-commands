@@ -1,0 +1,9 @@
+az group create -l westeurope -n rg-infastructure
+
+az keyvault create --location westeurope --name Infastructure --resource-group Infrastructure
+
+az keyvault update --name Infrastructure --network-acls-vnets dronecloud-vnet/dronecloud-subnet
+
+az ad sp create-for-rbac  --role Contributor --name "sp-infastructure"  #Creation of infastructure sp
+
+az role definition create --role-definition ..\..\Utillities\sp-role-definitions.json

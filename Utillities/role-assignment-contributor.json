@@ -1,0 +1,14 @@
+{
+    "Name": "role_assignment_contributor",
+    "Description":"A role designed for writing and deleting role assignments",
+    "AssignableScopes": [
+        "/subscriptions/32ec75d5-1e6b-4c8a-9170-bcabf13f9087"
+    ],
+    "Actions": [
+            "Microsoft.Authorization/roleAssignments/write",
+            "Microsoft.Authorization/roleAssignments/delete"
+    ],
+    "not_actions": [],
+    "dataActions": [],
+    "notDataActions": []
+}

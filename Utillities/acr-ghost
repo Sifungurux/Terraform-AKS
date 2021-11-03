@@ -1,0 +1,198 @@
+PS C:\Projekts\Drone> docker pull ghost
+Using default tag: latest
+latest: Pulling from library/ghost
+b380bbd43752: Pull complete
+8d36a6ce056a: Pull complete
+f75fe68b8e22: Pull complete
+44f6d143e12f: Pull complete
+0ebe8063dedd: Pull complete
+f984e0e37c5a: Pull complete
+4e83d2c6dc92: Pull complete
+b9c0ad5f200f: Pull complete
+Digest: sha256:931242485b2a43271dcfd7fdb649ff6b54418ed82891453020a21260032c8be5
+Status: Downloaded newer image for ghost:latest
+docker.io/library/ghost:latest
+
+PS C:\Projekts\Drone> docker tag ghost droneshuttles.azurecr.io/ghost       
+
+PS C:\Projekts\Drone> docker push droneshuttles.azurecr.io/ghost      
+Using default tag: latest
+The push refers to repository [droneshuttles.azurecr.io/ghost]
+aef54efdac08: Pushed
+9ab48b2ca4ba: Pushed
+faf7d86b7200: Pushed
+ccc026ece506: Pushed
+700a16a7e58e: Pushed
+75cc58399dae: Pushed
+be3714ce51bd: Pushed
+a3b67720d9ec: Pushed
+e81bff2725db: Pushed
+latest: digest: sha256:dbcca7624cfb7acdd46ddc572417eec19fcfb035d5bdd752f41a4dcaa5ab0b86 size: 2209
+
+
+PS C:\Projekts\Drone> az acr repository list --name droneshuttles --output table               
+Result
+--------
+ghost
+
+
+PS C:\Projekts\Drone> kubectl.exe apply -f .\Utillities\deployment.json
+deployment.apps/ghost-deployment created
+
+
+PS C:\Projekts\Drone> kubectl.exe describe deployment ghost-deployment
+Name:                   ghost-deployment
+Namespace:              default
+CreationTimestamp:      Mon, 08 Nov 2021 20:53:53 +0100
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=Ghost
+Replicas:               2 desired | 2 updated | 2 total | 2 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=Ghost
+  Containers:
+   ghost:
+    Image:        ghost:latest
+    Port:         80/TCP
+    Host Port:    0/TCP
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   ghost-deployment-78d584b477 (2/2 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  66s   deployment-controller  Scaled up replica set ghost-deployment-78d584b477 to 2
+
+PS C:\Projekts\Drone> kubectl.exe apply -f .\Utillities\deployment.json --validate=false
+  
+  deployment.apps/ghost-deployment unchanged
+  service/ghost-deployment created
+  ingress.networking.k8s.io/ghost-deployment created
+
+
+PS C:\Projekts\Drone> 
+
+# Creating a public IP for the AKS Cluster
+Jonas@DESKTOP-VCNQVF6 MINGW64 /c/Projekts/Drone (main)
+$ az network public-ip create \
+     --resource-group dronecloud \
+     --name ghost \
+     --sku Standard \
+     --allocation-method static
+{
+  "publicIp": {
+    "ddosSettings": null,
+    "deleteOption": null,
+    "dnsSettings": null,
+    "etag": "W/\"ff38129c-3cdf-4ba8-929f-19596caeddc6\"",
+    "extendedLocation": null,
+    "id": "/subscriptions/32ec75d5-1e6b-4c8a-9170-bcabf13f9087/resourceGroups/dronecloud/providers/Microsoft.Network/publicIPAddresses/ghost",
+    "idleTimeoutInMinutes": 4,
+    "ipAddress": "40.113.98.90",
+    "ipConfiguration": null,
+    "ipTags": [],
+    "linkedPublicIpAddress": null,
+    "location": "westeurope",
+    "migrationPhase": null,
+    "name": "ghost",
+    "natGateway": null,
+    "provisioningState": "Succeeded",
+    "publicIpAddressVersion": "IPv4",
+    "publicIpAllocationMethod": "Static",
+    "publicIpPrefix": null,
+    "resourceGroup": "dronecloud",
+    "resourceGuid": "0b300306-918a-4fee-9ede-d503571fc0e4",
+    "servicePublicIpAddress": null,
+    "sku": {
+      "name": "Standard",
+      "tier": "Regional"
+    },
+    "tags": null,
+    "type": "Microsoft.Network/publicIPAddresses",
+    "zones": null
+  }
+}
+
+$ kubectl get services --namespace kube-system
+NAME                                                  TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)                      AGE
+addon-http-application-routing-default-http-backend   ClusterIP      10.0.106.240   <none>           80/TCP                       3h40m
+addon-http-application-routing-nginx-ingress          LoadBalancer   10.0.104.153   20.101.161.156   80:32755/TCP,443:30911/TCP   3h40m
+kube-dns                                              ClusterIP      10.0.0.10      <none>           53/UDP,53/TCP                3h40m
+metrics-server                                        ClusterIP      10.0.196.79    <none>           443/TCP                      3h40m
+
+Jonas@DESKTOP-VCNQVF6 MINGW64 /c/Projekts/Drone (main)
+$ kubectl get configmaps --namespace kube-system
+NAME                                                       DATA   AGE
+addon-http-application-routing-nginx-configuration         0      3h40m
+addon-http-application-routing-tcp-services                0      3h40m
+addon-http-application-routing-udp-services                0      3h40m
+azure-ip-masq-agent-config                                 1      3h40m
+cluster-autoscaler-status                                  1      49m
+coredns                                                    1      3h40m
+coredns-autoscaler                                         1      3h36m
+coredns-custom                                             0      3h40m
+extension-apiserver-authentication                         6      3h40m
+ingress-controller-leader-addon-http-application-routing   0      3h35m
+kube-root-ca.crt                                           1      3h40m
+overlay-upgrade-data                                       4      3h40m
+tunnelfront-kubecfg                                        1      3h40m
+
+Jonas@DESKTOP-VCNQVF6 MINGW64 /c/Projekts/Drone (main)
+$ kubectl get secrets --namespace kube-system
+NAME                                                              TYPE                                  DATA   AGE
+addon-http-application-routing-external-dns-token-pqzpz           kubernetes.io/service-account-token   3      3h40m
+addon-http-application-routing-nginx-ingress-serviceaccounswtzh   kubernetes.io/service-account-token   3      3h40m
+attachdetach-controller-token-c6g5x                               kubernetes.io/service-account-token   3      3h40m
+azure-cloud-provider-token-hnv48                                  kubernetes.io/service-account-token   3      3h40m
+bootstrap-signer-token-s4n9t                                      kubernetes.io/service-account-token   3      3h40m
+certificate-controller-token-m9bvc                                kubernetes.io/service-account-token   3      3h40m
+cloud-node-manager-token-js9vl                                    kubernetes.io/service-account-token   3      3h40m
+clusterrole-aggregation-controller-token-qd4xr                    kubernetes.io/service-account-token   3      3h40m
+coredns-autoscaler-token-qlkqj                                    kubernetes.io/service-account-token   3      3h40m
+coredns-token-brbnl                                               kubernetes.io/service-account-token   3      3h40m
+cronjob-controller-token-54tsj                                    kubernetes.io/service-account-token   3      3h40m
+csi-azuredisk-node-sa-token-82rlt                                 kubernetes.io/service-account-token   3      3h40m
+csi-azurefile-node-sa-token-95kh2                                 kubernetes.io/service-account-token   3      3h40m
+daemon-set-controller-token-pxkbl                                 kubernetes.io/service-account-token   3      3h40m
+default-token-4d4x4                                               kubernetes.io/service-account-token   3      3h40m
+deployment-controller-token-vvzlk                                 kubernetes.io/service-account-token   3      3h40m
+disruption-controller-token-5krnz                                 kubernetes.io/service-account-token   3      3h40m
+endpoint-controller-token-8dlwm                                   kubernetes.io/service-account-token   3      3h40m
+endpointslice-controller-token-2wr8v                              kubernetes.io/service-account-token   3      3h40m
+endpointslicemirroring-controller-token-757ww                     kubernetes.io/service-account-token   3      3h40m
+ephemeral-volume-controller-token-4m7g8                           kubernetes.io/service-account-token   3      3h40m
+expand-controller-token-g9kgx                                     kubernetes.io/service-account-token   3      3h40m
+generic-garbage-collector-token-ks78g                             kubernetes.io/service-account-token   3      3h40m
+horizontal-pod-autoscaler-token-jm6kn                             kubernetes.io/service-account-token   3      3h40m
+job-controller-token-th7hq                                        kubernetes.io/service-account-token   3      3h40m
+kube-proxy-token-k42tq                                            kubernetes.io/service-account-token   3      3h40m
+metrics-server-token-gzjcx                                        kubernetes.io/service-account-token   3      3h40m
+namespace-controller-token-cn46l                                  kubernetes.io/service-account-token   3      3h40m
+node-controller-token-r5cpz                                       kubernetes.io/service-account-token   3      3h40m
+persistent-volume-binder-token-2f9ns                              kubernetes.io/service-account-token   3      3h40m
+pod-garbage-collector-token-ljqmz                                 kubernetes.io/service-account-token   3      3h40m
+pv-protection-controller-token-nxqjg                              kubernetes.io/service-account-token   3      3h40m
+pvc-protection-controller-token-pmgsg                             kubernetes.io/service-account-token   3      3h40m
+replicaset-controller-token-g2qz7                                 kubernetes.io/service-account-token   3      3h40m
+replication-controller-token-vps9d                                kubernetes.io/service-account-token   3      3h40m
+resourcequota-controller-token-4j96f                              kubernetes.io/service-account-token   3      3h40m
+root-ca-cert-publisher-token-wsh4d                                kubernetes.io/service-account-token   3      3h40m
+service-account-controller-token-sqvwt                            kubernetes.io/service-account-token   3      3h40m
+statefulset-controller-token-khxhd                                kubernetes.io/service-account-token   3      3h40m
+token-cleaner-token-9c8w8                                         kubernetes.io/service-account-token   3      3h40m
+ttl-after-finished-controller-token-qsk6d                         kubernetes.io/service-account-token   3      3h40m
+ttl-controller-token-g76nm                                        kubernetes.io/service-account-token   3      3h40m
+tunnelend                                                         Opaque                                2      3h37m
+tunnelfront                                                       Opaque                                2      3h37m
+tunnelfront-tls                                                   Opaque                                2      3h40m
+tunnelfront-token-297kf                                           kubernetes.io/service-account-token   3      3h40m

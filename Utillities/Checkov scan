@@ -1,0 +1,143 @@
+jkp@DESKTOP-VCNQVF6:/mnt/c/Projekts/Drone$ checkov -d src/
+
+       _               _
+   ___| |__   ___  ___| | _______   __
+  / __| '_ \ / _ \/ __| |/ / _ \ \ / /
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By bridgecrew.io | version: 2.0.560
+
+terraform scan results:
+
+Passed checks: 7, Failed checks: 1, Skipped checks: 0
+
+Check: CKV_AZURE_6: "Ensure AKS has an API Server Authorized IP Ranges enabled"
+        PASSED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/bc_azr_kubernetes_3
+
+Check: CKV_AZURE_8: "Ensure Kubernetes Dashboard is disabled"
+        PASSED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/bc_azr_kubernetes_5
+
+Check: CKV_AZURE_115: "Ensure that AKS enables private clusters"
+        PASSED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/ensure-that-aks-enables-private-clusters
+
+Check: CKV_AZURE_4: "Ensure AKS logging to Azure Monitoring is Configured"
+        PASSED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/bc_azr_kubernetes_1
+
+Check: CKV_AZURE_7: "Ensure AKS cluster has Network Policy configured"
+        PASSED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/bc_azr_kubernetes_4
+
+Check: CKV_AZURE_5: "Ensure RBAC is enabled on AKS clusters"
+        PASSED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/bc_azr_kubernetes_2
+
+Check: CKV_AZURE_116: "Ensure that AKS uses Azure Policies Add-on"
+        PASSED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/ensure-that-aks-uses-azure-policies-add-on
+
+Check: CKV_AZURE_117: "Ensure that AKS uses disk encryption set"
+        FAILED for resource: module.aks_cluster.azurerm_kubernetes_cluster.cluster
+        File: /modules/aks-cluster/main.tf:1-80
+        Calling File: /deployment/main.tf:49-77
+        Guide: https://docs.bridgecrew.io/docs/ensure-that-aks-uses-disk-encryption-set
+
+                1  | resource "azurerm_kubernetes_cluster" "cluster" {
+                2  |   name                            = var.cluster_name
+                3  |   location                        = var.location
+                4  |   resource_group_name             = var.resource_group_name
+                5  |   dns_prefix                      = var.dns_prefix
+                6  |   kubernetes_version              = var.kubernetes_version
+                7  |   api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
+                8  |   private_cluster_enabled         = true
+                9  | 
+                10 |   default_node_pool {
+                11 |     name            = var.default_pool_name
+                12 |     node_count      = var.node_count
+                13 |     vm_size         = var.vm_size
+                14 |     os_disk_size_gb = var.os_disk_size_gb
+                15 |     vnet_subnet_id  = var.vnet_subnet_id
+                16 |     max_pods        = var.max_pods
+                17 |     type            = var.default_pool_type
+                18 | 
+                19 |     availability_zones  = ["1", "2"]
+                20 |     enable_auto_scaling = true
+                21 |     min_count           = var.min_count
+                22 |     max_count           = var.max_count
+                23 | 
+                24 |     tags = merge(
+                25 |       {
+                26 |         "environment" = "dronecloud"
+                27 |       },
+                28 |       {
+                29 |         "aadssh" = "True"
+                30 |       },
+                31 |     )
+                32 |   }
+                33 | 
+                34 | 
+                35 |   network_profile {
+                36 |     network_plugin     = var.network_plugin
+                37 |     network_policy     = "calico"
+                38 |     service_cidr       = var.service_cidr
+                39 |     dns_service_ip     = "10.0.0.10"
+                40 |     docker_bridge_cidr = "172.17.0.1/16"
+                41 |   }
+                42 | 
+                43 |   service_principal {
+                44 |     client_id     = var.client_id
+                45 |     client_secret = var.client_secret
+                46 |   }
+                47 | 
+                48 |    
+                49 |   addon_profile {
+                50 |     http_application_routing {
+                51 |       enabled = true
+                52 |     }
+                53 |     azure_policy {
+                54 |       enabled = true
+                55 |      }
+                56 |     oms_agent {
+                57 |       enabled                    = true
+                58 |       log_analytics_workspace_id = var.diagnostics_workspace_id
+                59 |     }
+                60 |   }
+                61 |   role_based_access_control {
+                62 |     enabled           = true
+                63 | 
+                64 |     azure_active_directory {
+                65 |       client_app_id       = var.aad_client_app_id
+                66 |       server_app_id       = var.aad_server_app_id
+                67 |       server_app_secret   = var.aad_server_app_secret
+                68 |       tenant_id           = var.tenant_id
+                69 | 
+                70 |     }
+                71 | 
+                72 |   }
+                73 |  tags = {
+                74 |         Environment = "Development"
+                75 |     }
+                76 | 
+                77 |   lifecycle {
+                78 |     prevent_destroy = false
+                79 |   }
+                80 | }
+
