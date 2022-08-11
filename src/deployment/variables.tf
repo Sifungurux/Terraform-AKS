@@ -11,6 +11,7 @@ variable "node_count" {
 variable "dns_prefix" {
   description = "DNS Suffix"
   default     = "<DNS>"  # Change this
+}
 
 variable "cluster_name" {
   description = "AKS cluster name"
